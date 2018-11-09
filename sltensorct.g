@@ -29,17 +29,31 @@ InstallMethod( PrintObj,
         function( x )
     
     local coeffs, monoms, l, i;
+        
     coeffs := x![1];
     monoms := x![2];
     l := Length( coeffs );
     
-    for i in [1..l-1] do
-        Print( coeffs[i], "*x(", monoms[i][1],",",monoms[i][2],")⊗ ", "t", 
-               "^",monoms[i][3],"+" );
-    od;
+    if l = 0 then
+        Print( "0" );
+        return;
+    fi;
     
-    Print( coeffs[l], "*x(", monoms[l][1],",",monoms[l][2],")⊗ ",
-           "t^",monoms[l][3] );
+    Print( coeffs[1], "*x(", monoms[1][1],",",monoms[1][2],")⊗ ",
+           "t^",monoms[1][3] );
+
+    
+    for i in [2..l] do
+        if coeffs[i] > 0 then
+            Print( "+" );
+        else
+            Print( "-" );
+        fi;
+        
+        Print( AbsInt( coeffs[i] ), "*x(", monoms[i][1],",",monoms[i][2],")⊗ ", "t", 
+               "^",monoms[i][3] );
+    od;
+
 end );
 
 CollectSLTensorCtElement := function( el )
@@ -56,9 +70,12 @@ CollectSLTensorCtElement := function( el )
         if pos = fail then
             Add( list[1], coeffs[i] );
             Add( list[2], monoms[i] );
-        else
+        elif list[1][pos]+coeffs[i] <> 0 then
             list[1][pos] := list[1][pos]+coeffs[i];
-        fi;
+        else
+            RemoveElmList( list[1], pos );
+            RemoveElmList( list[2], pos );
+         fi;
     od;
     
     return SLTensorCtElement( list );
@@ -85,6 +102,29 @@ InstallMethod( \+,
 
 end );
 
+InstallMethod( \=,
+        "For elements of sl2 tensor C[t]",
+        [ IsSLTensorCtElement and IsSLTensorCtElementRep, 
+          IsSLTensorCtElement and IsSLTensorCtElementRep ],
+        function( x, y )
+    
+    local el;
+    
+    el := x-y;
+    return Length( el![1] ) = 0; end );
+      
+
+InstallMethod( ZeroOp,
+        "For elements of sl2 tensor C[t]",
+        [ IsSLTensorCtElement and IsSLTensorCtElementRep ],
+        x -> SLTensorCtElement( [[],[]] ));
+
+InstallMethod( AdditiveInverseOp,
+        "For elements of sl2 tensor C[t]",
+        [ IsSLTensorCtElement and IsSLTensorCtElementRep ],
+        x -> (-1)*x );
+
+
 InstallMethod( \*,
         "scalar multiple of elements of sl2 tensor C[t]",
         [ IsRat, 
@@ -95,6 +135,10 @@ InstallMethod( \*,
     
     coeffsx := x![1];
     monomsx := x![2];
+    
+    if coeffsx = [] then
+        return SLTensorCtElement( [[],[]] );
+    fi;
     
     res := [];
     
