@@ -10,10 +10,17 @@ SLTensorCtElement := function( list )
     
     length := Length( list );
     
-    return Objectify( NewType( SLTensorCtFamily,  IsSLTensorCtElement and 
-                   IsSLTensorCtElementRep ),
-                   [ List( [1,3..length-1], x->list[x] ), 
-                     List( [2,4..length], x->list[x] )]);
+    if IsInt( list[1] ) then
+    
+        return Objectify( NewType( SLTensorCtFamily,  IsSLTensorCtElement and 
+                       IsSLTensorCtElementRep ),
+                       [ List( [1,3..length-1], x->list[x] ), 
+                         List( [2,4..length], x->list[x] )]);
+    else
+        
+        return Objectify( NewType( SLTensorCtFamily,  IsSLTensorCtElement and 
+                       IsSLTensorCtElementRep ), list );
+    fi;
 end;
 
 InstallMethod( PrintObj,
@@ -35,34 +42,47 @@ InstallMethod( PrintObj,
            "t^",monoms[l][3] );
 end );
 
+CollectSLTensorCtElement := function( el )
+    local i, coeffs, monoms, list, m, pos;
+    
+    coeffs := el![1];
+    monoms := el![2];
+    
+    list := [[],[]];
+    
+    for i in [1..Length( monoms )] do
+        m := monoms[i];
+        pos := Position( list[2], m );
+        if pos = fail then
+            Add( list[1], coeffs[i] );
+            Add( list[2], monoms[i] );
+        else
+            list[1][pos] := list[1][pos]+coeffs[i];
+        fi;
+    od;
+    
+    return SLTensorCtElement( list );
+end;
+
 InstallMethod( \+,
         "For elements of sl2 tensor C[t]",
         [ IsSLTensorCtElement and IsSLTensorCtElementRep, 
           IsSLTensorCtElement and IsSLTensorCtElementRep ],
         function( x, y )
     
-    local coeffsx, coeffsy, monomsx, monomsy, res, i, pos, coeff;
+    local coeffs, monoms, el;
     
-    coeffsx := x![1];
-    coeffsy := y![1];
+    coeffs := []; monoms := [];
+    Append( coeffs, x![1] );
+    Append( coeffs, y![1] );
     
-    monomsx := x![2];
-    monomsy := y![2];
+    Append( monoms, x![2] );
+    Append( monoms, y![2] );
     
-    res := [];
-    
-    for i in [1..Length( coeffsx )] do
-        if monomsx[i] in monomsy then
-            pos := Position( monomsy, monomsx[i] );
-            coeff := coeffsx[i] + coeffsy[pos];
-        else
-            coeff := coeffsx[i];
-        fi;
-        
-        Append( res, [ coeff, monomsx[i] ] );
-    od;
-    
-    return SLTensorCtElement( res );
+    el := SLTensorCtElement( [coeffs,monoms] );
+    el := CollectSLTensorCtElement( el );
+    return el;
+
 end );
 
 InstallMethod( \*,
