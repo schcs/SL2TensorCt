@@ -1,0 +1,15 @@
+A multiplicação é assim:
+[x,y] = xy - (-1)^{|x| |y|}yx, onde |z| é a paridade de z (isso é 1 ou -1): 
+|x(1,2)| = |x(1,3)| = |x(2,1)| = |x(3,1)| = 1
+|x(2,3)| = |x(3,2)| = |h(1,2) = x(1,1) + x(2,2)| = |h(1,3) = x(1,1) + x(3,3)| = 0.
+
+Explicitamente, temos que:
+[x, x]=0 para qualquer x (isso não é sempre assim em superalgebras de Lie, as vezes podemos ter [x,x]\neq 0, mas no caso sl(1,2) isso não acontece).
+[x(1,2), x(1,3)]=0; [x(1,2), x(2,3)]=x(1,3); [x(1,2), x(2,1)]=h(1,2); [x(1,2), x(3,1)]=x(3,2); [x(1,2), x(3,2)]=0
+[x(1,3), x(2,3)]=0; [x(1,3), x(2,1)]=x(2,3); [x(1,3), x(3,1)]=h(1,3); [x(1,3), x(3,2)]=x(1,2)
+[x(2,3), x(2,1)]=0; [x(2,3), x(3,1)]=x(1,2); [x(2,3), x(3,2)]=h(1,2) - h(1,3)
+Se h = é diagonal com h_1, h_2, h_3 na diagonal principal, então
+[h, x(1,2)]=(h_1 - h_2)x(1,2); [h, x(1,3)]=(h_1 - h_3)x(1,3); [h, x(2,3)]=(h_2 - h_3)x(2,3)
+[h, x(2,1)]=(h_2 - h_1)x(2,1); [h, x(3,1)]=(h_3 - h_1)x(3,1); [h, x(3,2)]=(h_3 - h_2)x(3,2)
+
+
