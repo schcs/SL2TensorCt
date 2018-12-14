@@ -47,7 +47,6 @@ CollectSLTensorCtElement := function( el )
             RemoveElmList( list[2], pos );
          fi;
     od;
-    Error();
     return SLTensorCtElement( list );
 end;
 
@@ -143,6 +142,7 @@ InstallMethod( \*,
             coeff := [coeffsx[i]*coeffsy[j]];
             elem := [monomsx[i][1],monomsx[i][2],monomsy[j][1],monomsy[j][2]];
             tpow := monomsx[i][3]+monomsy[j][3];
+                        
             if elem = [1,2,2,3] then
                 prod := [[1,3,tpow]];
             elif elem = [2,3,1,2] then
@@ -213,6 +213,9 @@ InstallMethod( \*,
             elif elem = [3,2,3,3] then
                 prod := [[3,2,tpow]];
                 coeff[1] := -coeff[1];
+            else
+                prod := [];
+                coeff[1] := 0;
             fi;
             
             if prod <> [] then
@@ -222,5 +225,6 @@ InstallMethod( \*,
             
         od;
     od;
+    
     return CollectSLTensorCtElement( SLTensorCtElement( res ));
 end );
