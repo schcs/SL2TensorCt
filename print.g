@@ -9,6 +9,18 @@ MonomString := function( monom )
                        String( monom[2] ), ")⊗ t^", String( monom[3] ));;
     fi;
 end;
+
+InstallMethod( PrintObj,
+        "For basis elements of sl2 tensor C[t]",
+        [ IsSLTensorCtBasisElement and IsSLTensorCtBasisElementRep  ],
+        function( x )
+    
+    local coeffs, monoms, l, i;
+    
+    Print( MonomString( [x![1], x![2], x![3]] ));
+    
+end );
+
    
 InstallMethod( PrintObj,
         "For elements of sl2 tensor C[t]",
