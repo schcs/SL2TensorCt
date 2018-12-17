@@ -26,22 +26,32 @@ SLTensorCtElement := function( list )
 end;
 
 SLTensorCtBasisElement := function( list )
-    
     local length;
     
     list := ShallowCopy( list );
-    
     
     return Objectify( NewType( SLTensorCtBasisFamily,  
                    IsSLTensorCtBasisElement and 
                        IsSLTensorCtBasisElementRep ), list );
 end;
 
+CoefficientList := function( el )
+    return el![1];
+end;
+
+MonomialList := function( el )
+    return List( el![2], x->SLTensorCtBasisElement( x ));
+end;
+
+MonomialComponents := function( mon )
+    return [mon![1],mon![2],mon![3]];
+end;
+
 CollectSLTensorCtElement := function( el )
     local i, coeffs, monoms, list, m, pos;
     
-    coeffs := el![1];
-    monoms := el![2];
+    coeffs := CoefficientList( el );
+    monoms := MonomialList( el );
     
     list := [[],[]];
     
@@ -67,18 +77,16 @@ InstallMethod( \+,
           IsSLTensorCtElement and IsSLTensorCtElementRep ],
         function( x, y )
     
-    local coeffs, monoms, el;
+    local coeffs, monoms;
     
     coeffs := []; monoms := [];
-    Append( coeffs, x![1] );
-    Append( coeffs, y![1] );
+    Append( coeffs, CoefficientList( x ));
+    Append( coeffs, CoefficientList( y ));
     
-    Append( monoms, x![2] );
-    Append( monoms, y![2] );
+    Append( monoms, MonomialList( x ));
+    Append( monoms, MonomialList( y ));
     
-    el := SLTensorCtElement( [coeffs,monoms] );
-    el := CollectSLTensorCtElement( el );
-    return el;
+    return CollectSLTensorCtElement( SLTensorCtElement( [coeffs,monoms] ));
 
 end );
 
@@ -91,7 +99,7 @@ InstallMethod( \=,
     local el;
     
     el := x-y;
-    return Length( el![1] ) = 0; end );
+    return Length( CoefficientList( el )) = 0; end );
     
 InstallMethod( \=,
         "For basis elements of sl2 tensor C[t]",
@@ -99,7 +107,7 @@ InstallMethod( \=,
           IsSLTensorCtBasisElement and IsSLTensorCtBasisElementRep ],
         function( x, y )
     
-    return x![1] = y![1] and x![2] = y![2] and x![3] = y![3];
+    return MonomialComponents( x ) = MonomialComponents( y );
     
 end );
 
@@ -108,11 +116,16 @@ InstallMethod( \<,
         [ IsSLTensorCtBasisElement and IsSLTensorCtBasisElementRep, 
           IsSLTensorCtBasisElement and IsSLTensorCtBasisElementRep ],
         function( x, y )
-    if x![3] < y![3] then 
+    
+    local xc, yc;
+    
+    xc := MonomialComponents( x ); yc := MonomialComponents( y );
+                                         
+    if xc[3] < yc[3] then 
         return true; 
-    elif x![2] < y![2] then
+    elif xc[2] < yc[2] then
         return true; 
-    elif x![1] < y![1] then
+    elif xc[1] < yc[1] then
         return true;
     else
         return false;
@@ -135,12 +148,10 @@ RandomSLTensorCtElement := function()
     return SLTensorCtElement( [coeffs,mons] );
 end;
 
-             
-
 Parity := function( mon )
     local vec, p0;
     
-    vec := [mon![1], mon![2], mon![3]];
+    vec := MonomialComponents( mon );
     
     if vec{[1,2]} in [[1,2],[1,3],[2,1],[3,1]] then
         p0 := 1;
@@ -154,11 +165,21 @@ Parity := function( mon )
 end;
 
 InstallMethod( \*,
+        "Scalar multiplication for basis elements of sl2 tensor C[t]",
+        [ IsRat, IsSLTensorCtBasisElement and IsSLTensorCtBasisElementRep ],
+        function( x, y )
+    
+    return SLTensorCtElement( [ [ x ], [ MonomialComponents( y )]]);
+end );
+
+
+
+InstallMethod( \*,
         "For basis elements of sl2 tensor C[t]",
         [ IsSLTensorCtBasisElement and IsSLTensorCtBasisElementRep, 
           IsSLTensorCtBasisElement and IsSLTensorCtBasisElementRep ],
         function( x, y )
-    local table, elem, pos, prod, tpow, i, j;
+    local table, elem, pos, prod, tpow, i, j, xc, yc;
     
     table := [[1,2,2,3,1,[1,3]],
               [1,2,2,1,1,[1,1]],
@@ -176,9 +197,9 @@ InstallMethod( \*,
               [2,3,3,3,1,[2,3]],
               [2,1,3,3,1,[2,1]],
               [3,3,3,2,1,[3,2]]];
-              
-              
-    elem := [x![1],x![2],y![1],y![2]];
+    
+    xc := MonomialComponents( x ); yc := MonomialComponents( y );
+    elem := [xc[1],xc[2],yc[1],yc[2]];
     
     prod := [];
     
@@ -186,7 +207,7 @@ InstallMethod( \*,
     if IsInt( pos ) then 
         prod := table[pos]{[5..Length( table[pos])]};
     else
-        elem := [y![1],y![2],x![1],x![2]];
+        elem := [yc[1],yc[2],xc[1],xc[2]];
         pos := Position( List( table, x->[x[1],x[2],x[3],x[4]] ), elem );
         if IsInt( pos ) then
             prod := table[pos]{[5..Length( table[pos])]};
@@ -202,7 +223,7 @@ InstallMethod( \*,
         return SLTensorCtElement( [[],[]] );
     fi;
     
-    tpow := x![3]+y![3];
+    tpow := xc[3]+yc[3];
     
     for i in [2,4..Length( prod )] do
         prod[i][3] := tpow;
@@ -231,8 +252,8 @@ InstallMethod( \*,
     
     local coeffsx, monomsx, res, i;
     
-    coeffsx := x![1];
-    monomsx := x![2];
+    coeffsx := CoefficientList( x );
+    monomsx := List( MonomialList( x ), MonomialComponents );
     
     if coeffsx = [] then
         return SLTensorCtElement( [[],[]] );
@@ -250,21 +271,19 @@ InstallMethod( \*,
         function( x, y )
     
     local coeffsx, monomsx, coeffsy, monomsy, coeff, prod, i, j, p, 
-          monomx, monomy, tpow;
+          tpow;
     
-    coeffsx := x![1];
-    monomsx := x![2];
-    coeffsy := y![1];
-    monomsy := y![2];
+    coeffsx := CoefficientList( x );
+    monomsx := MonomialList( x );
+    coeffsy := CoefficientList( y );
+    monomsy := MonomialList( y );
     
     prod := 0*x;
     
     for i in [1..Length( coeffsx )] do
         for j in [1..Length( coeffsy )] do
             coeff := coeffsx[i]*coeffsy[j];
-            monomx := SLTensorCtBasisElement( monomsx[i] ); 
-            monomy := SLTensorCtBasisElement( monomsy[j] );
-            p := coeff*(monomx*monomy);
+            p := coeff*(monomsx[i]*monomsy[j]);
             prod := prod + p;
         od;
     od;

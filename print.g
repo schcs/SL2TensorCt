@@ -65,6 +65,20 @@ InstallMethod( PrintObj,
 end );
 
 InstallMethod( PrintObj,
+        "For PBW monomials of sl2 tensor C[t]",
+        [ IsSLTensorCtPBWMonomial and IsSLTensorCtPBWMonomialRep  ],
+        function( x )
+    local mons, i;
+    
+    mons := SplitSLTensorCtPBWMonomial( x );
+    for i in [1..Length( mons )] do
+        Print( "[", SLTensorCtBasisElement( mons[i] ), "]" );
+    od;
+    
+    end );
+    
+
+InstallMethod( PrintObj,
         "For PBW elements of sl2 tensor C[t]",
         [ IsSLTensorCtPBWElement and IsSLTensorCtPBWElementRep  ],
         function( x )
@@ -102,7 +116,7 @@ InstallMethod( PrintObj,
         if AbsInt( coeffs[i] ) <> 1 then 
             Print( AbsInt( coeffs[i] ), "*" );
         fi;
-        for j in [1..Length( monoms[1] )] do 
+        for j in [1..Length( monoms[i] )] do 
             Print( "[", MonomString( monoms[i][j] ), "]" );
         od;
     od;
