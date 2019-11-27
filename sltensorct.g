@@ -1,5 +1,6 @@
 ## The following file contains some functions that compute elements with
 ## the Lie (super)algebra sl(1|2) ⊗ C[t]
+## Written by Lucas Calixto and Csaba Schneider
 
 # This function is to objectify a list into a SL2TensorCt element
 
