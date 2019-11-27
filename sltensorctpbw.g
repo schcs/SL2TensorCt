@@ -3,6 +3,8 @@
 
 
 # This function is to objectify a list into a SL2TensorCt element
+# gap> SLTensorCtPBWElement( [-1,[[1,2,3],[2,3,1]],3,[[2,1,2],[3,2,-1]]] );
+# -[x(1,2)⊗ t^3][x(2,3)⊗ t^1]+3*[x(2,1)⊗ t^2][x(3,2)⊗ t^-1]
 
 SLTensorCtPBWElement := function( list )
     

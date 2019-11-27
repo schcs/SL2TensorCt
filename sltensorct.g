@@ -4,6 +4,10 @@
 
 # This function is to objectify a list into a SL2TensorCt element
 
+# the following function can be used to define an element of SL(1|2)[t]
+# gap> SLTensorCtElement( [-1,[1,2,1],2,[2,3,2]] );
+# -x(1,2)⊗ t^1+2*x(2,3)⊗ t^2
+
 SLTensorCtElement := function( list )
     
     local length;
@@ -25,6 +29,11 @@ SLTensorCtElement := function( list )
                        IsSLTensorCtElementRep ), list );
     fi;
 end;
+
+# the following function is to define a basis element of sl(1|2)[t] 
+# gap> SLTensorCtBasisElement ([1,2,3] );    
+# x(1,2)⊗ t^3
+
 
 SLTensorCtBasisElement := function( list )
     local length;
@@ -48,11 +57,14 @@ MonomialComponents := function( mon )
     return [mon![1],mon![2],mon![3]];
 end;
 
+# the following collects an element of sl(1|2)[t]
+
+
 CollectSLTensorCtElement := function( el )
     local i, coeffs, monoms, list, m, pos;
     
     coeffs := CoefficientList( el );
-    monoms := MonomialList( el );
+    monoms := List( MonomialList( el ), MonomialComponents );
     
     list := [[],[]];
     
@@ -69,6 +81,7 @@ CollectSLTensorCtElement := function( el )
             RemoveElmList( list[2], pos );
          fi;
     od;
+        
     return SLTensorCtElement( list );
 end;
 
@@ -162,7 +175,7 @@ Parity := function( mon )
         Error( "Illegal basis element" );
     fi;
     
-    return (p0 + vec[3]) mod 2;
+    return p0;
 end;
 
 InstallMethod( \*,
@@ -266,7 +279,7 @@ InstallMethod( \*,
 end );
 
 InstallMethod( \*,
-        "scalar multiple of elements of sl2 tensor C[t]",
+        "product of two of elements of sl2 tensor C[t]",
         [ IsSLTensorCtElement and IsSLTensorCtElementRep,
           IsSLTensorCtElement and IsSLTensorCtElementRep ],
         function( x, y )
