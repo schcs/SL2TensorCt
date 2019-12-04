@@ -76,6 +76,21 @@ CollectSLTensorCtPBWElement := function( el )
     return SLTensorCtPBWElement( list );
 end;
 
+ListCoefficientsSLTensorPBWElement := function( el )
+
+	return el![1];
+end;
+	
+
+ListMonomialsSLTensorCtPBWElement := function( el )
+	
+	local mons;
+	
+	mons := StructuralCopy( el![2] );	
+	return List( mons, SLTensorCtPBWMonomial );
+end;
+	
+
 InstallMethod( \+,
         "For PBW elements of sl2 tensor C[t]",
         [ IsSLTensorCtPBWElement and IsSLTensorCtPBWElementRep, 
@@ -168,34 +183,6 @@ InstallMethod( \*,
     return SLTensorCtPBWMonomial( xl );
 end );
 
-InstallMethod( \*,
-        "product PBW monomials of sl2 tensor C[t]",
-        [ IsSLTensorCtPBWElement and IsSLTensorCtPBWElement, 
-          IsSLTensorCtPBWElement and IsSLTensorCtPBWElementRep ],
-        function( x, y )
-    
-    local coeffsx, coeffsy, monomsx, monomsy, res, i, j, coeff, monom;
-    
-    coeffsx := x![1];
-    coeffsy := y![1];
-    monomsx := x![2];
-    monomsy := y![2];
-    res := [[],[]];
-    
-    for i in [1..Length( coeffsx )] do
-        for j in [1..Length( coeffsy )] do
-            coeff := coeffsx[i]*coeffsy[j];
-            monom := monomsx[i];
-            Append( monom, monomsy[j] );
-            Add( res[1], coeff );
-            Add( res[2], monom );
-        od;
-    od;
-    
-    return SLTensorCtPBWElement( res );
-    
-end );
-
 IsCollectedSLTensorCtPBWMonomial := function( mon )
     local els, i;
     
@@ -210,6 +197,14 @@ IsCollectedSLTensorCtPBWMonomial := function( mon )
     return true;
 end;
 
+# The following is wrong by a sign. ex:
+# m := SLTensorCtPBWMonomial( [[1,2,2],[3,1,3]] );
+# [x(1,2)⊗ t^2][x(3,1)⊗ t^3]
+# IsCollectedSLTensorCtPBWMonomial(m);
+# 1
+# CollectSLTensorCtPBWMonomialAtPosition(m,1);
+# [x(3,1)⊗ t^3][x(1,2)⊗ t^2]-[x(3,2)⊗ t^5] (the result should be - this)
+
 CollectSLTensorCtPBWMonomialAtPosition := function( mon, pos )
    local monlist, list1, list2, x1, y1, px, py, z, mon1, mon2, y1x1, zz, e1, e2; 
    
@@ -221,15 +216,69 @@ CollectSLTensorCtPBWMonomialAtPosition := function( mon, pos )
     y1 := SLTensorCtBasisElement( monlist[pos+1] );
     px := Parity( x1 ); py := Parity( y1 );
     
-    z := x1*y1;
+    z := y1*x1;
     
     mon1 := SLTensorCtPBWMonomial( list1 );
     mon2 := SLTensorCtPBWMonomial( list2 );
     y1x1 := SLTensorCtPBWMonomial( [monlist[pos+1],monlist[pos]] );
-    zz := SLTensorCtPBWElement( [ z![1], List( [z![2], x->[x]])]);
+    zz := SLTensorCtPBWElement( [ z![1], List( [z![2], x->[x]])]);    
     
-    return (1*mon1)*(1*y1x1)*(1*mon2)-(px*py)*((1*mon1)*zz*(1*mon2));
+    return (-1)^(px*py)*((1*mon1)*(1*y1x1)*(1*mon2)-((1*mon1)*zz*(1*mon2)));
 end;
+
+CollectSLTensorCtPBWElement2 := function( el )
+
+	local newel, coeffs, mons, i, iscollected, c;
+		
+	newel := StructuralCopy( el );	
+
+	repeat
+	    iscollected := true;
+		coeffs := ListCoefficientsSLTensorPBWElement( newel );
+		mons := ListMonomialsSLTensorCtPBWElement( newel );
+	
+		for i in [1..Length(mons)] do
+			c := IsCollectedSLTensorCtPBWMonomial( mons[i] );
+			if c <> true then
+				iscollected := false;
+				newel := newel + coeffs[i]*((-1)*mons[i]+CollectSLTensorCtPBWMonomialAtPosition( mons[i], c ));
+				break;
+			fi;
+		od;
+		newel := CollectSLTensorCtPBWElement( newel );
+	until iscollected;
+			
+	return newel;
+end;
+	
+	
+InstallMethod( \*,
+        "product PBW elements of sl2 tensor C[t]",
+        [ IsSLTensorCtPBWElement and IsSLTensorCtPBWElement, 
+          IsSLTensorCtPBWElement and IsSLTensorCtPBWElementRep ],
+        function( x, y )
+    
+    local coeffsx, coeffsy, monomsx, monomsy, res, i, j, coeff, monom;
+    
+    coeffsx := StructuralCopy( x![1] );
+    coeffsy := StructuralCopy( y![1] );
+    monomsx := StructuralCopy( x![2] );
+    monomsy := StructuralCopy( y![2] );
+    res := [[],[]];
+        
+    for i in [1..Length( coeffsx )] do
+        for j in [1..Length( coeffsy )] do
+            coeff := coeffsx[i]*coeffsy[j];
+            monom := monomsx[i];
+            Append( monom, monomsy[j] );
+            Add( res[1], coeff );
+            Add( res[2], monom );
+        od;
+    od;
+    
+    return CollectSLTensorCtPBWElement( SLTensorCtPBWElement( res ));
+    
+end );
 
     
     

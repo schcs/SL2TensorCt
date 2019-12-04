@@ -131,19 +131,23 @@ InstallMethod( \<,
           IsSLTensorCtBasisElement and IsSLTensorCtBasisElementRep ],
         function( x, y )
     
-    local xc, yc;
+    local xc, yc, l, xp, yp;
+    
+    # this list defines the order for the basis elements of sl(1|2)    
+    l := [[1,2],[3,1],[3,2],[1,1],[3,3],[2,1],[1,3],[2,3]];
+    
+    # in this order, x tensor t^i < y tensor t^j iff x < y or x = y and j > i 
     
     xc := MonomialComponents( x ); yc := MonomialComponents( y );
-                                         
-    if xc[3] < yc[3] then 
-        return true; 
-    elif xc[2] < yc[2] then
-        return true; 
-    elif xc[1] < yc[1] then
-        return true;
-    else
+    xp := Position( l, xc{[1,2]} ); yp := Position( l, yc{[1,2]});
+    
+    if xp < yp then 
+    	return true; 
+    elif xp > yp then 
         return false;
-    fi;
+    elif xp = yp then
+        return xc[3] > yc[3];
+    fi;	                                         
 end );
 
 RandomSLTensorCtElement := function()
@@ -201,7 +205,7 @@ InstallMethod( \*,
               [1,3,2,1,1,[2,3]],
               [1,3,3,1,1,[3,3]],
               [1,3,3,2,1,[1,2]],
-              [2,3,3,1,1,[1,2]],
+              [2,3,3,1,1,[2,1]],
               [2,3,3,2,1,[1,1],-1,[3,3]],
               [1,1,1,3,1,[1,3]],
               [1,1,2,3,1,[2,3]],
