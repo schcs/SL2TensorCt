@@ -107,7 +107,6 @@ InstallMethod( \+,
     Append( monoms, y![2] );
     
     el := SLTensorCtPBWElement( [coeffs,monoms] );
-    
     el := CollectSLTensorCtPBWElement( el );
     return el;
 
@@ -123,7 +122,18 @@ InstallMethod( \=,
     
     el := x-y;
     return Length( el![1] ) = 0; end );
-      
+    
+InstallMethod( \=,
+        "For PBW elements of sl2 tensor C[t]",
+        [ IsSLTensorCtPBWMonomial and IsSLTensorCtPBWMonomialRep, 
+          IsSLTensorCtPBWMonomial and IsSLTensorCtPBWMonomialRep ],
+        function( x, y )
+    
+    local el;
+    
+    el := 1*x-1*y;
+    return Length( el![1] ) = 0; end );
+
 
 InstallMethod( ZeroOp,
         "For PBW elements of sl2 tensor C[t]",
@@ -209,16 +219,37 @@ IsCollectedSLTensorCtPBWMonomial := function( mon )
     return true;
 end;
 
-# The following is wrong by a sign. ex:
-# m := SLTensorCtPBWMonomial( [[1,2,2],[3,1,3]] );
-# [x(1,2)⊗ t^2][x(3,1)⊗ t^3]
+ProductSLTensorCtPBWElements := function( x, y )
+            
+    local coeffsx, coeffsy, monomsx, monomsy, res, i, j, coeff, monom;
+    
+    coeffsx := StructuralCopy( x![1] );
+    coeffsy := StructuralCopy( y![1] );
+    monomsx := StructuralCopy( x![2] );
+    monomsy := StructuralCopy( y![2] );
+    res := [[],[]];
+    for i in [1..Length( coeffsx )] do
+        for j in [1..Length( coeffsy )] do
+            coeff := coeffsx[i]*coeffsy[j];
+            monom := StructuralCopy( monomsx[i] );
+            Append( monom, monomsy[j] );
+            Add( res[1], coeff );
+            Add( res[2], monom );
+        od;
+    od;
+    
+    res := CollectSLTensorCtPBWElement( SLTensorCtPBWElement( res ));
+    return res;
+end;
+
 # IsCollectedSLTensorCtPBWMonomial(m);
 # 1
 # CollectSLTensorCtPBWMonomialAtPosition(m,1);
 # [x(3,1)⊗ t^3][x(1,2)⊗ t^2]-[x(3,2)⊗ t^5] (the result should be - this)
 
 CollectSLTensorCtPBWMonomialAtPosition := function( mon, pos )
-   local monlist, list1, list2, x1, y1, px, py, z, mon1, mon2, y1x1, zz, e1, e2; 
+    local monlist, list1, list2, x1, y1, px, py, z, mon1, mon2, 
+          y1x1, zz, e1, e2, newel; 
    
     monlist := SplitSLTensorCtPBWMonomial( mon );
     list1 := monlist{[1..pos-1]};
@@ -234,14 +265,22 @@ CollectSLTensorCtPBWMonomialAtPosition := function( mon, pos )
     
     z := y1*x1;
     
-    
-    mon1 := SLTensorCtPBWMonomial( list1 );
-    mon2 := SLTensorCtPBWMonomial( list2 );
-    y1x1 := SLTensorCtPBWMonomial( [monlist[pos+1],monlist[pos]] );
+    mon1 := 1*SLTensorCtPBWMonomial( list1 );
+    mon2 := 1*SLTensorCtPBWMonomial( list2 );
+    y1x1 := 1*SLTensorCtPBWMonomial( [monlist[pos+1],monlist[pos]] );
     zz := SLTensorCtPBWElement( [ z![1], List( z![2], x->[x])]);    
     
-    return (-1)^(px*py)*((1*mon1)*(1*y1x1)*(1*mon2)-((1*mon1)*zz*(1*mon2)));
+    newel := (-1)^(px*py)*(
+           ProductSLTensorCtPBWElements(        
+           ProductSLTensorCtPBWElements( mon1, y1x1 ), mon2 )-
+           ProductSLTensorCtPBWElements(        
+           ProductSLTensorCtPBWElements( mon1, zz ), mon2 ));
+    
+    return CollectSLTensorCtPBWElement( newel );
+    
 end;
+
+
 
 CollectSLTensorCtPBWElement2 := function( el )
 
@@ -284,24 +323,7 @@ InstallMethod( \*,
           IsSLTensorCtPBWElement and IsSLTensorCtPBWElementRep ],
         function( x, y )
     
-    local coeffsx, coeffsy, monomsx, monomsy, res, i, j, coeff, monom;
-    
-    coeffsx := StructuralCopy( x![1] );
-    coeffsy := StructuralCopy( y![1] );
-    monomsx := StructuralCopy( x![2] );
-    monomsy := StructuralCopy( y![2] );
-    res := [[],[]];
-    for i in [1..Length( coeffsx )] do
-        for j in [1..Length( coeffsy )] do
-            coeff := coeffsx[i]*coeffsy[j];
-            monom := StructuralCopy( monomsx[i] );
-            Append( monom, monomsy[j] );
-            Add( res[1], coeff );
-            Add( res[2], monom );
-        od;
-    od;
-    res := CollectSLTensorCtPBWElement( SLTensorCtPBWElement( res ));
-    return res;
+    return CollectSLTensorCtPBWElement2( ProductSLTensorCtPBWElements( x, y ));
 end );
 
     
@@ -328,16 +350,9 @@ TestCollection := function( l0 )
                           x->coefs[x]*SLTensorCtPBWMonomial( mons[x] )));
     od;
     
-    u := CollectSLTensorCtPBWElement2( els[1]*els[2] );
-    w := CollectSLTensorCtPBWElement2( els[2]*els[3] );
-    
-    w1 := CollectSLTensorCtPBWElement2(u*els[3]);
-    w2 := CollectSLTensorCtPBWElement2(els[1]*w);
-    
-    if w1-w2 = 0*w1 then
-        return true;
-    else 
-        return els;
+    if (els[1]*els[2])*els[3] <> els[1]*(els[2]*els[3]) then
+        Error( 101 );
     fi;
     
+    return els;
 end;
