@@ -339,7 +339,7 @@ TestCollection := function( l0 )
         
         mons := List( [1..l1], x->List( [1..l2], x->Random( 
                         [[1,1],[1,2],[1,3],[2,1],[2,3],[3,1],[3,2],[3,3]] )));
-        coefs := List( [1..l1], x->Random( [1] ));
+        coefs := List( [1..l1], x->Random( Rationals ));
         
         for e1 in mons do
             for mon in e1 do
@@ -354,5 +354,5 @@ TestCollection := function( l0 )
         Error( 101 );
     fi;
     
-    return els;
+    return true;
 end;
